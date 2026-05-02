@@ -1,0 +1,84 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "XXXX",
+  authDomain: "XXXX",
+  projectId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// 🎬 LOAD MOVIES
+async function loadMovies(){
+  const snap = await getDocs(collection(db,"movies"));
+  let box = document.getElementById("movies");
+  box.innerHTML = "";
+
+  snap.forEach(d => {
+    let id = d.id;
+    let data = d.data();
+
+    box.innerHTML += `
+      <div>
+        🎥 <input value="${data.title}" id="m-${id}">
+        <button onclick="updateMovie('${id}')">Update</button>
+        <button onclick="deleteMovie('${id}')">Delete</button>
+      </div>
+    `;
+  });
+}
+
+// 📦 ORDER
+async function placeOrder(){
+  await addDoc(collection(db,"orders"),{
+    name: name.value,
+    phone: phone.value,
+    address: address.value
+  });
+  alert("Order Success ✔️");
+}
+
+// 🔐 LOGIN
+async function login(){
+  await signInWithEmailAndPassword(auth,email.value,password.value);
+  adminPanel.style.display="block";
+  loadOrders();
+}
+
+// 📋 ORDERS
+async function loadOrders(){
+  const snap = await getDocs(collection(db,"orders"));
+  let box = document.getElementById("orders");
+  box.innerHTML="";
+
+  snap.forEach(d=>{
+    box.innerHTML += `<p>${d.data().name} - ${d.data().phone}</p>`;
+  });
+}
+
+// ➕ ADD MOVIE
+async function addMovie(){
+  await addDoc(collection(db,"movies"),{
+    title: movieTitle.value
+  });
+  loadMovies();
+}
+
+// ✏️ UPDATE MOVIE
+async function updateMovie(id){
+  let val = document.getElementById("m-"+id).value;
+  await updateDoc(doc(db,"movies",id),{title:val});
+  loadMovies();
+}
+
+// ❌ DELETE MOVIE
+async function deleteMovie(id){
+  await deleteDoc(doc(db,"movies",id));
+  loadMovies();
+}
+
+loadMovies();
